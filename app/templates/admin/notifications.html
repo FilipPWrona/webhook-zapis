@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/admin">Panel administratora</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Lista powiadomień</li>
+            </ol>
+        </nav>
+        <h1>Lista powiadomień</h1>
+        <p class="lead">Historia wysłanych powiadomień</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Powiadomienia</h2>
+                <a href="/admin" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-list me-1"></i>
+                    Pokaż zgłoszenia
+                </a>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Data</th>
+                                <th>ID zgłoszenia</th>
+                                <th>Webhook URL</th>
+                                <th>Temat</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notification in notifications %}
+                            <tr>
+                                <td>{{ notification.id }}</td>
+                                <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <a href="/admin/submissions/{{ notification.submission_id }}">
+                                        {{ notification.submission_id }}
+                                    </a>
+                                </td>
+                                <td>{{ notification.recipient }}</td>
+                                <td>{{ notification.subject }}</td>
+                                <td>
+                                    {% if notification.status == 'sent' %}
+                                    <span class="badge bg-success">Wysłane</span>
+                                    {% elif notification.status == 'failed' %}
+                                    <span class="badge bg-danger">Błąd</span>
+                                    <div class="small text-danger mt-1">{{ notification.error_message }}</div>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ notification.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Brak powiadomień w historii. Powiadomienia pojawią się tutaj, gdy ktoś wypełni formularz lub gdy uruchomisz test webhook.
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="/api/webhook/test" class="btn btn-success">
+                        <i class="fas fa-vial me-2"></i>
+                        Uruchom test webhook
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %} 

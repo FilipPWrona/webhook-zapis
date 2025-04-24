@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/admin">Panel administratora</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Szczegóły zgłoszenia #{{ submission.id }}</li>
+            </ol>
+        </nav>
+        <h1>Szczegóły zgłoszenia #{{ submission.id }}</h1>
+        <p class="lead">Formularz: {{ submission.form_name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">Dane formularza</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%">Pole</th>
+                                <th>Wartość</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, value in submission.form_data.items() %}
+                            <tr>
+                                <td><strong>{{ key }}</strong></td>
+                                <td>{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h2 class="h5 mb-0">Historia powiadomień</h2>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Data</th>
+                                <th>Odbiorca</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notification in notifications %}
+                            <tr>
+                                <td>{{ notification.id }}</td>
+                                <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ notification.recipient }}</td>
+                                <td>
+                                    {% if notification.status == 'sent' %}
+                                    <span class="badge bg-success">Wysłane</span>
+                                    {% elif notification.status == 'failed' %}
+                                    <span class="badge bg-danger">Błąd</span>
+                                    <div class="small text-danger mt-1">{{ notification.error_message }}</div>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ notification.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Brak historii powiadomień dla tego zgłoszenia.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h2 class="h5 mb-0">Informacje o zgłoszeniu</h2>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ID
+                        <span class="badge bg-primary rounded-pill">{{ submission.id }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Data utworzenia
+                        <span>{{ submission.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ID formularza
+                        <span>{{ submission.form_id }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Powiadomienie
+                        {% if submission.notified %}
+                        <span class="badge bg-success">Wysłane</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Nie wysłane</span>
+                        {% endif %}
+                    </li>
+                    {% if submission.notification_sent_at %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Data powiadomienia
+                        <span>{{ submission.notification_sent_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-2"></i>
+                        Usuń zgłoszenie
+                    </button>
+                </div>
+                
+                <!-- Modal potwierdzenia usunięcia -->
+                <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="deleteModalLabel">Potwierdź usunięcie</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Czy na pewno chcesz usunąć zgłoszenie #{{ submission.id }} z formularza "{{ submission.form_name }}"?</p>
+                                <p class="text-danger"><strong>Ta operacja jest nieodwracalna!</strong></p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                                <form action="/admin/submissions/{{ submission.id }}/delete" method="post">
+                                    <button type="submit" class="btn btn-danger">Usuń</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2">
+            <a href="/admin" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Powrót do listy
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %} 
